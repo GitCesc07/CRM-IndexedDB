@@ -1,5 +1,6 @@
 (function () {
     let DB;
+    let idCliente;
 
     // Variables globales
     const nombreInput = document.querySelector("#nombre");
@@ -20,7 +21,7 @@
         // verificar el ID de la Url
         const parametrosUrl = new URLSearchParams(window.location.search);
 
-        const idCliente = parametrosUrl.get("id");
+        idCliente = parametrosUrl.get("id");
         if(idCliente) {
          setTimeout(() => {
             obtenerCliente(idCliente);
@@ -32,12 +33,35 @@
         e.preventDefault();
 
         if(nombreInput.value === "" || emailInput.value === "" || telefonoInput.value === "" || empresaInput.value === "") {
-            
+            imprimirAlerta("Todos los campos son obligatorios", "error");
+            return;
+        }
+
+        // Actualizar Cliente
+        const clienteActualizado = {
+            nombre: nombreInput.value,
+            email: emailInput.value,
+            telefono: telefonoInput.value,
+            empresa: empresaInput.value,
+            id: Number(idCliente)
+        }
+
+        const transaction = DB.transaction(["crm"], "readwrite");
+        const objectStore = transaction.objectStore("crm");
+
+        objectStore.put(clienteActualizado);
+
+        transaction.oncomplete = function() {
+            console.log("Editado correctamente");
+        };
+
+        transaction.onerror = function() {
+            console.log("Hubo un error");
         }
     }
 
     function obtenerCliente(id) {
-        const transaction = DB.transaction(["crm"], "readwrite");
+        const transaction = DB.transaction(["crm"], "readonly");
         const objectStore = transaction.objectStore("crm");
 
         const cliente = objectStore.openCursor();
